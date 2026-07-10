@@ -196,7 +196,7 @@ if not current_df.empty:
             st.write(f"**{row['title'].strip()}**")
             st.caption(row["author"])
 else:
-    st.write("No one's currently reading anything logged yet.")
+    st.write("No current reads logged yet.")
 
 st.divider()
 
@@ -226,7 +226,7 @@ else:
     st.write("No ratings yet.")
 
 # ---- Books read over time ----
-st.subheader("📈 Reading Pace Over Time")
+st.subheader("📈 Reading Pace")
 finished_df = filtered_df.dropna(subset=["date"])
 if not finished_df.empty:
     monthly = (

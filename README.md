@@ -136,6 +136,44 @@ streamlit run app.py
 Streamlit will print a local URL (usually `http://localhost:8501`) — open it
 in your browser. Use `Ctrl+C` in the terminal to stop the server.
 
+## 7. Deploy it (so your friends can use it without any setup)
+ 
+The whole point of the reader dropdown is that you can host **one** instance
+and everyone just picks their name — friends don't need their own Notion
+token, `.env` file, or anything installed. [Streamlit Community
+Cloud](https://share.streamlit.io) hosts this for free.
+ 
+1. **Push your repo to GitHub** if you haven't already (make sure `.env` is
+   *not* committed — check with `git status`; your `.gitignore` handles this).
+2. Go to **[share.streamlit.io](https://share.streamlit.io)** and sign in
+   with GitHub.
+3. Click **"Create app" → "Deploy a public app from GitHub"** and select:
+   - **Repository**: your `books-dashboard` repo
+   - **Branch**: `main`
+   - **Main file path**: `app.py`
+4. Before deploying, open **"Advanced settings"** and paste your secrets in
+   TOML format:
+```toml
+   NOTION_TOKEN = "secret_your_integration_token_here"
+   NOTION_DATABASE_ID = "your_database_id_here"
+   GOOGLE_BOOKS_API_KEY = "your_google_books_api_key_here"
+```
+   Streamlit Cloud exposes these as environment variables at runtime, which
+   is exactly what `config.py`'s `os.environ.get(...)` calls already expect —
+   no code changes needed.
+5. Click **Deploy**. It takes a couple minutes to install dependencies and
+   launch, then you'll get a URL like `your-app-name.streamlit.app`.
+6. **Restrict access** (recommended, since this shows real names and full
+   review text): in the app's settings on Streamlit Cloud, turn off public
+   access and invite specific people by email instead. Only invited viewers
+   will be able to open the link.
+7. Share the link with your friends. They open it, pick their name from the
+   **Reader** dropdown, and see their own stats — nothing to configure on
+   their end.
+ 
+You can update secrets or re-invite people anytime from the app's settings
+page on Streamlit Cloud. Code changes pushed to `main` redeploy automatically.
+
 ## Troubleshooting
 
 - **"Set NOTION_TOKEN and NOTION_DATABASE_ID..." error on load** — your
