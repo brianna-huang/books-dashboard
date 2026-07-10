@@ -70,6 +70,44 @@ col3.metric("Total entries", filtered_df.shape[0])
 
 st.divider()
 
+# ---- Top 5 rated books (with covers) ----
+st.subheader("🏆 Top 5 Rated Books")
+rated_df = filtered_df.dropna(subset=["rating"]).copy()
+rated_df["title_key"] = rated_df["title"].str.strip().str.lower()
+
+top_books = (
+    rated_df.groupby("title_key", as_index=False)
+    .agg(
+        title=("title", "first"),
+        author=("author", "first"),
+        avg_rating=("rating", "mean"),
+        num_ratings=("rating", "count"),
+    )
+    .sort_values("avg_rating", ascending=False)
+    .head(5)
+)
+
+if top_books.empty:
+    st.write("No ratings yet.")
+else:
+    cols = st.columns(len(top_books))
+    for col, (_, row) in zip(cols, top_books.iterrows()):
+        with col:
+            cover_url = get_cover_url(row["title"], row["author"])
+            if cover_url:
+                st.image(cover_url, width=140)
+            else:
+                st.write("📕")  # placeholder if no cover found
+            st.write(f"**{row['title'].strip()}**")
+            st.caption(row["author"])
+            st.write(
+                f"⭐ {row['avg_rating']:.1f} "
+                f"({int(row['num_ratings'])} rating{'s' if row['num_ratings'] != 1 else ''})"
+            )
+
+st.divider()
+
+
 if selected_reviewer == "Everyone":
     # ---- Reader of the month (previous calendar month) ----
     now = datetime.now()
@@ -143,42 +181,6 @@ if selected_reviewer == "Everyone":
  
     st.divider()
 
-# ---- Top 5 rated books (with covers) ----
-st.subheader("🏆 Top 5 Rated Books")
-rated_df = filtered_df.dropna(subset=["rating"]).copy()
-rated_df["title_key"] = rated_df["title"].str.strip().str.lower()
-
-top_books = (
-    rated_df.groupby("title_key", as_index=False)
-    .agg(
-        title=("title", "first"),
-        author=("author", "first"),
-        avg_rating=("rating", "mean"),
-        num_ratings=("rating", "count"),
-    )
-    .sort_values("avg_rating", ascending=False)
-    .head(5)
-)
-
-if top_books.empty:
-    st.write("No ratings yet.")
-else:
-    cols = st.columns(len(top_books))
-    for col, (_, row) in zip(cols, top_books.iterrows()):
-        with col:
-            cover_url = get_cover_url(row["title"], row["author"])
-            if cover_url:
-                st.image(cover_url, width=140)
-            else:
-                st.write("📕")  # placeholder if no cover found
-            st.write(f"**{row['title'].strip()}**")
-            st.caption(row["author"])
-            st.write(
-                f"⭐ {row['avg_rating']:.1f} "
-                f"({int(row['num_ratings'])} rating{'s' if row['num_ratings'] != 1 else ''})"
-            )
-
-st.divider()
 
 # ---- Currently reading ----
 st.subheader("📖 Current Reads")

@@ -1,3 +1,4 @@
+import logging
 import time
 
 import requests
@@ -6,6 +7,7 @@ import streamlit as st
 from config import GOOGLE_BOOKS_API_KEY
 
 GOOGLE_BOOKS_URL = "https://www.googleapis.com/books/v1/volumes"
+logger = logging.getLogger(__name__)
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -78,6 +80,10 @@ def get_cover_url(title, author):
     for query in queries:
         items, error = _search_google_books(query)
         if error:
+            logger.warning(
+                "Google Books lookup failed | query=%r | error=%s | api_key_set=%s",
+                query, error, bool(GOOGLE_BOOKS_API_KEY),
+            )
             # If we're being rate limited, further fallback queries will just
             # fail the same way -- stop burning through the limit and bail out.
             if "429" in error:
