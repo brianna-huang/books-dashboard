@@ -19,7 +19,4 @@ PROPERTY_MAP = {
     "review": "Review",       # Text property (the written review)
 }
 
-# Your name as it appears in the "reviewer" property, so the "just me" filter works
-MY_NAME = "bri"
-
 GOOGLE_BOOKS_API_KEY = os.environ.get("GOOGLE_BOOKS_API_KEY", "")

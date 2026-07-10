@@ -4,7 +4,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from config import NOTION_TOKEN, DATABASE_ID, MY_NAME
+from config import NOTION_TOKEN, DATABASE_ID
 from data.notion_source import fetch_books
 from data.covers import get_cover_url
 
@@ -31,11 +31,13 @@ if df.empty:
 # ---- Sidebar filters ----
 st.sidebar.header("Filters")
  
-view_choice = st.sidebar.radio("Show:", ["Everyone's books", "Just my books"])
-filtered_df = df[df["reviewer"] == MY_NAME] if view_choice == "Just my books" else df.copy()
+reviewers = sorted(df["reviewer"].dropna().unique().tolist())
+selected_reviewer = st.sidebar.selectbox("Reader", ["Everyone"] + reviewers)
+filtered_df = df.copy() if selected_reviewer == "Everyone" else df[df["reviewer"] == selected_reviewer]
  
-st.subheader(f"📚 Showing: {view_choice}")
+st.subheader(f"📚 Showing: {selected_reviewer}" if selected_reviewer == "Everyone" else f"📚 Showing: {selected_reviewer}'s books")
  
+selected_genres = []
 if filtered_df["genre"].notna().any():
     all_genres = sorted(
         {g.strip() for genres in filtered_df["genre"].dropna() for g in genres.split(",")}
@@ -68,7 +70,7 @@ col3.metric("Total entries", filtered_df.shape[0])
 
 st.divider()
 
-if view_choice != "Just my books":
+if selected_reviewer == "Everyone":
     # ---- Reader of the month (previous calendar month) ----
     now = datetime.now()
     first_of_this_month = now.replace(day=1)
@@ -199,17 +201,18 @@ else:
 st.divider()
 
 # ---- Genre breakdown ----
-st.subheader("🎭 Genre breakdown")
-if filtered_df["genre"].notna().any():
-    genre_series = (
-        filtered_df["genre"].dropna().str.split(",").explode().str.strip()
-    )
-    genre_counts = genre_series.value_counts().reset_index()
-    genre_counts.columns = ["genre", "count"]
-    fig_genre = px.pie(genre_counts, names="genre", values="count")
-    st.plotly_chart(fig_genre, use_container_width=True)
-else:
-    st.write("No genre data yet.")
+if not selected_genres:
+    st.subheader("🎭 Genre breakdown")
+    if filtered_df["genre"].notna().any():
+        genre_series = (
+            filtered_df["genre"].dropna().str.split(",").explode().str.strip()
+        )
+        genre_counts = genre_series.value_counts().reset_index()
+        genre_counts.columns = ["genre", "count"]
+        fig_genre = px.pie(genre_counts, names="genre", values="count")
+        st.plotly_chart(fig_genre, use_container_width=True)
+    else:
+        st.write("No genre data yet.")
 
 # ---- Rating distribution ----
 st.subheader("⭐ Rating Distribution")
@@ -239,36 +242,36 @@ else:
 
 st.divider()
 
-# ---- Fun stat: longest review ----
-if filtered_df["review"].notna().any():
-    st.subheader("📝 Longest review award")
-    st.write("Tell us how you really feel...")
-    longest = filtered_df.loc[filtered_df["review"].str.len().idxmax()]
-    st.write(
-        f"**{longest['reviewer']}** on "
-        f"*{longest['title']}* ({len(longest['review'])} characters)"
-    )
-    cover_url = get_cover_url(longest["title"], longest["author"])
-    if cover_url:
-        st.image(cover_url, width=140)
-    else:
-        st.write("📕")  # placeholder if no cover found
+# ---- Fun stat: longest review (COMMENTED OUT FOR NOW) ---- 
+# if filtered_df["review"].notna().any():
+#     st.subheader("📝 Longest review award")
+#     st.write("Tell us how you really feel...")
+#     longest = filtered_df.loc[filtered_df["review"].str.len().idxmax()]
+#     st.write(
+#         f"**{longest['reviewer']}** on "
+#         f"*{longest['title']}* ({len(longest['review'])} characters)"
+#     )
+#     cover_url = get_cover_url(longest["title"], longest["author"])
+#     if cover_url:
+#         st.image(cover_url, width=140)
+#     else:
+#         st.write("📕")  # placeholder if no cover found
 
-    preview_length = 280
-    review_text = longest["review"]
-    if len(review_text) > preview_length:
-        st.write(review_text[:preview_length].rstrip() + "...")
-        with st.expander("Read full review"):
-            st.write(review_text)
-    else:
-        st.write(review_text)
+#     preview_length = 280
+#     review_text = longest["review"]
+#     if len(review_text) > preview_length:
+#         st.write(review_text[:preview_length].rstrip() + "...")
+#         with st.expander("Read full review"):
+#             st.write(review_text)
+#     else:
+#         st.write(review_text)
 
-st.divider()
+# st.divider()
 
-# ---- Full table ----
-st.subheader("All Entries")
-st.dataframe(
-    filtered_df.sort_values("date", ascending=False),
-    use_container_width=True,
-    hide_index=True,
-)
+# ---- Full table (COMMENTED OUT FOR NOW) ----
+# st.subheader("All Entries")
+# st.dataframe(
+#     filtered_df.sort_values("date", ascending=False),
+#     use_container_width=True,
+#     hide_index=True,
+# )

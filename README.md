@@ -1,6 +1,6 @@
 # Books Dashboard
 
-A Streamlit dashboard for a shared "books we've read" Notion database. Shows
+A Streamlit dashboard for a shared book review Notion database. Shows
 reading stats, reader of the month, top rated and most-read books (with
 covers pulled from Google Books), currently-reading, genre breakdown, rating
 distribution, reading pace over time, and a full sortable table.
