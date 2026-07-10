@@ -4,3 +4,4 @@ plotly
 requests
 notion-client
 python-dotenv
+protobuf==4.25.3
