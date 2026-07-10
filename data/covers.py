@@ -7,6 +7,7 @@ import streamlit as st
 from config import GOOGLE_BOOKS_API_KEY
 
 GOOGLE_BOOKS_URL = "https://www.googleapis.com/books/v1/volumes"
+logging.basicConfig(level=logging.WARNING)  # no-op if a handler already exists
 logger = logging.getLogger(__name__)
 
 
@@ -49,6 +50,16 @@ def _search_google_books(query):
                 ) + ")"
             resp.raise_for_status()
             return resp.json().get("items"), None
+        except requests.exceptions.HTTPError as e:
+            detail = ""
+            try:
+                error_obj = resp.json().get("error", {})
+                reasons = [err.get("reason") for err in error_obj.get("errors", [])]
+                detail = f" | reason={reasons} | message={error_obj.get('message')}"
+            except Exception:
+                pass
+            last_error = str(e) + detail
+            break
         except requests.exceptions.RequestException as e:
             last_error = str(e)
             break
@@ -58,6 +69,8 @@ def _search_google_books(query):
 
 def get_cover_url(title, author):
     """Look up a book cover thumbnail via the Google Books API. Returns None if not found."""
+    logger.warning("get_cover_url called | title=%r | author=%r", title, author)
+
     if not title:
         return None
 
@@ -81,7 +94,7 @@ def get_cover_url(title, author):
         items, error = _search_google_books(query)
         if error:
             logger.warning(
-                "Google Books lookup failed | query=%r | error=%s | api_key_set=%s",
+                "Google Books lookup FAILED | query=%r | error=%s | api_key_set=%s",
                 query, error, bool(GOOGLE_BOOKS_API_KEY),
             )
             # If we're being rate limited, further fallback queries will just
@@ -89,8 +102,14 @@ def get_cover_url(title, author):
             if "429" in error:
                 break
             continue
+
         cover = _extract_cover(items)
+        logger.warning(
+            "Google Books lookup OK | query=%r | num_items=%s | cover_found=%s",
+            query, len(items) if items else 0, bool(cover),
+        )
         if cover:
             return cover
 
+    logger.warning("get_cover_url returning None | title=%r", title)
     return None
