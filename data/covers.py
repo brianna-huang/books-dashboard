@@ -25,7 +25,7 @@ def _search_google_books(query):
     429s even under light use. If GOOGLE_BOOKS_API_KEY is set, requests use that
     key's own quota instead of the shared anonymous pool, which is the real fix.
     """
-    params = {"q": query, "maxResults": 1}
+    params = {"q": query, "maxResults": 1, "country": "US"}
     if GOOGLE_BOOKS_API_KEY:
         params["key"] = GOOGLE_BOOKS_API_KEY
 
