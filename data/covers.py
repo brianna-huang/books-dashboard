@@ -17,7 +17,7 @@ def _search_google_books(query):
 
     Returns (items, error). Splitting these apart matters: a `None` result used to
     mean either "no book matched" or "the HTTP request itself failed" (timeout,
-    blocked network, rate limit, bad response) -- and there was no way to tell which
+    blocked network, rate limit, bad response)- and there was no way to tell which
     from the UI. Now the caller gets the real error string when something goes wrong.
 
     Retries once on 429 (rate limited), since Google's unauthenticated quota is
@@ -44,26 +44,13 @@ def _search_google_books(query):
                 if attempt == 0:
                     time.sleep(min(retry_after, 3))
                     continue
-                return None, last_error + " (rate limited by Google Books API" + (
-                    " -- add GOOGLE_BOOKS_API_KEY in config.py to get your own quota"
-                    if not GOOGLE_BOOKS_API_KEY else ""
-                ) + ")"
+                return None, last_error
             resp.raise_for_status()
             return resp.json().get("items"), None
-        except requests.exceptions.HTTPError as e:
-            detail = ""
-            try:
-                error_obj = resp.json().get("error", {})
-                reasons = [err.get("reason") for err in error_obj.get("errors", [])]
-                detail = f" | reason={reasons} | message={error_obj.get('message')}"
-            except Exception:
-                pass
-            last_error = str(e) + detail
-            break
         except requests.exceptions.RequestException as e:
             last_error = str(e)
             break
-
+ 
     return None, last_error
 
 
@@ -89,27 +76,17 @@ def get_cover_url(title, author):
     if stripped_title and stripped_title != title:
         queries.append(f'intitle:"{stripped_title}"' + (f' inauthor:"{author}"' if author else ""))
     queries.append(f'intitle:"{stripped_title or title}"')
-
+ 
     for query in queries:
         items, error = _search_google_books(query)
         if error:
-            logger.warning(
-                "Google Books lookup FAILED | query=%r | error=%s | api_key_set=%s",
-                query, error, bool(GOOGLE_BOOKS_API_KEY),
-            )
             # If we're being rate limited, further fallback queries will just
-            # fail the same way -- stop burning through the limit and bail out.
+            # fail the same way. Stop burning through the limit and bail out.
             if "429" in error:
                 break
             continue
-
         cover = _extract_cover(items)
-        logger.warning(
-            "Google Books lookup OK | query=%r | num_items=%s | cover_found=%s",
-            query, len(items) if items else 0, bool(cover),
-        )
         if cover:
             return cover
-
-    logger.warning("get_cover_url returning None | title=%r", title)
+ 
     return None
