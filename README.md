@@ -5,6 +5,8 @@ reading stats, reader of the month, top rated and most-read books (with
 covers pulled from Google Books), currently-reading, genre breakdown, rating
 distribution, reading pace over time, and a full sortable table.
 
+<img width="366" height="222" alt="Screen Recording 2026-07-13 at 10 27 00 AM" src="https://github.com/user-attachments/assets/78ec59f6-4efd-4994-905c-8a56c99798cc" />
+
 ## Features
 
 - **Everyone's books / just my books** toggle, plus a genre filter
